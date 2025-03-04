@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "820765875479",
+    "project_id": "taskmanagerdev-730fb",
+    "storage_bucket": "taskmanagerdev-730fb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:820765875479:android:477058a2905d07ba022b52",
+        "android_client_info": {
+          "package_name": "com.secondapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "820765875479-ntvslulbhlrdnlmfbfghi9mj8o1urmc3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArZXFcxfBa8Q4k84k0xjHkNyRbGmae1_g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "820765875479-ntvslulbhlrdnlmfbfghi9mj8o1urmc3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
