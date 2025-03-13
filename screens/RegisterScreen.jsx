@@ -71,7 +71,7 @@ export default function RegisterScreen({navigation}) {
     const userData = {name, email, mobile, password};
 
     axios
-      .post('http://192.168.1.14:8080/register', userData)
+      .post('http://192.168.1.14:5000/api/profiles/register', userData)
       .then(res => {
         console.log('Response Status:', res.status);
         console.log('Response Data:', res.data);

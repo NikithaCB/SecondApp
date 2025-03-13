@@ -7,6 +7,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import RegisterScreen from './screens/RegisterScreen';
 import DashboardScreen from './screens/DashboardScreen';
 import ProfileCreationScreen from './screens/ProfileCreationScreen';
+import ProfileMatchScreen from './screens/ProfileMatchScreen';
 
 const Stack = createStackNavigator();
 
@@ -50,6 +51,7 @@ function App() {
           {/* <Stack.Screen name="Register" component={RegisterScreen} /> */}
           <Stack.Screen name="Dashboard" component={DashboardScreen} options={{headerShown:false}} />
           <Stack.Screen name="ProfileCreation" component={ProfileCreationScreen} />
+          <Stack.Screen name="MatchProfile" component={ProfileMatchScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

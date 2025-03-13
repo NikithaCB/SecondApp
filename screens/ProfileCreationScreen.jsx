@@ -1,25 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   TextInput,
-  Button,
   Text,
   Image,
   ActivityIndicator,
   StyleSheet,
-  TouchableOpacity
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
-import { getUserProfile, createUserProfile, updateUserProfile } from '../api/profileApi'; // ✅ Import API functions
-import Card from '../components/CardComponent';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useRoute} from '@react-navigation/native';
+import {
+  getUserProfile,
+  createUserProfile,
+  updateUserProfile,
+} from '../api/profileApi';
 
 export default function ProfileCreationScreen() {
-  const userId = 'USER_ID_HERE'; // Replace with actual user ID from auth
+  const route = useRoute();
+  // const { email: routeEmail } = route.params || {};
+  // const email = route?.params?.email;
+
+
+  const [userId, setUserId] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
+    email: route?.params?.email || '',
     profilePicture: '',
     bio: '',
     skills: '',
@@ -27,69 +37,115 @@ export default function ProfileCreationScreen() {
     rating: 5,
   });
 
+
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchEmail = async () => {
+      let emailFromStorage = null;
       try {
-        const userData = await getUserProfile(userId);
-        if (userData) {
-          setUser(userData);
-          setFormData({
-            name: userData.name,
-            email: userData.email,
-            profilePicture: userData.profilePicture || '',
-            bio: userData.bio || '',
-            skills: userData.skills.join(', '),
-            learningGoals: userData.learningGoals.join(', '),
-            rating: userData.rating || 5,
-          });
-          setIsNewUser(false);
-        } else {
-          setIsNewUser(true);
-        }
+        emailFromStorage = await AsyncStorage.getItem('email');
       } catch (error) {
-        console.error('❌ Error fetching profile:', error);
-        setIsNewUser(true);
-      } finally {
-        setLoading(false);
+        console.error('❌ Error fetching email from AsyncStorage:', error);
+      }
+  
+      const receivedEmail = route?.params?.email || emailFromStorage;
+  
+      if (receivedEmail) {
+        setFormData(prevData => ({ ...prevData, email: receivedEmail }));
+        console.log('✅ Email set successfully:', receivedEmail);
+      } else {
+        console.warn('⚠️ No email found in params or AsyncStorage');
       }
     };
-    fetchProfile();
+  
+    fetchEmail();
   }, []);
+  
+  
+
+
+//   useEffect(() => {
+//     if (!formData.email) {
+//       const fetchEmail = async () => {
+//         try {
+
+//           console.log('📧 Email received in ProfileCreationScreen:', routeEmail);
+// console.log('📧 Email in formData:', formData.email);
+
+
+//           const storedEmail = await AsyncStorage.getItem('email');
+//           if (storedEmail) {
+//             setFormData(prevData => ({
+//               ...prevData,
+//               email: storedEmail, // ✅ Fallback for missing `routeEmail`
+//             }));
+//           }
+//         } catch (error) {
+//           console.error('❌ Error fetching email:', error);
+//         }
+//       };
+  
+//       fetchEmail();
+//     }
+//   }, []);
+  
+  
+  
 
   const handleInputChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
+    setFormData({...formData, [field]: value});
   };
 
+  
   const handleSaveOrUpdate = async () => {
     const userData = {
-      name: formData.name,
-      email: formData.email,
-      profilePicture: formData.profilePicture || '',
-      bio: formData.bio,
+      ...formData,
       skills: formData.skills.split(',').map(s => s.trim()),
       learningGoals: formData.learningGoals.split(',').map(s => s.trim()),
-      rating: formData.rating,
+      email: formData.email.trim(),  // ✅ Ensure no spaces or unexpected characters
     };
-
-    console.log('📌 User Data to Send:', userData);
-
-    if (isNewUser) {
-      const createdUser = await createUserProfile(userData);
-      console.log('✅ Created User:', createdUser);
-      if (createdUser) {
-        setUser(createdUser);
-        setIsNewUser(false);
+  
+    console.log('📧 Email for update:', userData.email);
+    console.log('📝 Final formData before API call:', userData);
+  
+    if (!userData.email) {
+      Alert.alert('Error', 'Email is missing. Please try again.');
+      return;
+    }
+  
+    try {
+      const existingProfile = await getUserProfile(userData.email);
+  
+      if (!existingProfile) {
+        console.log('🆕 Creating new profile...');
+        const newProfile = await createUserProfile(userData);
+        console.log('✅ New Profile Created:', newProfile);
+  
+        if (newProfile) {
+          setUser(newProfile);
+          Alert.alert('Success', 'Profile created successfully!');
+        }
+      } else {
+        console.log('🔄 Updating existing profile...');
+        const updatedUser = await updateUserProfile(userData.email, userData);
+        console.log('✅ Profile Updated:', updatedUser);
+  
+        if (updatedUser) {
+          setUser(updatedUser);
+          Alert.alert('Success', 'Profile updated successfully!');
+        }
       }
-    } else {
-      const updatedUser = await updateUserProfile(userId, userData);
-      console.log('✅ Updated User:', updatedUser);
-      if (updatedUser) {
-        setUser(updatedUser);
-      }
+    } catch (error) {
+      console.error('❌ Error saving profile:', error.response?.data || error.message);
+      Alert.alert('Error', 'Failed to save profile. Please try again.');
     }
   };
+  
 
-  if (loading) return <ActivityIndicator size="large" color="blue" />;
+  
+  
+
+
+  // if (loading) return <ActivityIndicator size="large" color="blue" />;
 
   return (
     <View style={styles.container}>
@@ -97,83 +153,68 @@ export default function ProfileCreationScreen() {
         source={{
           uri: formData.profilePicture || 'https://via.placeholder.com/100',
         }}
-        style={{ width: 100, height: 100, borderRadius: 50 }}
+        style={styles.profileImage}
       />
+      {['name', 'bio', 'skills', 'learningGoals'].map(field => (
+        <TextInput
+          key={field}
+          style={styles.inputContainer}
+          placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+          value={formData[field]}
+          onChangeText={text => handleInputChange(field, text)}
+        />
+      ))}
+
+      {/* Non-editable Email Field */}
       <TextInput
-        style={styles.inputContainer}
-        placeholder="Name"
-        value={formData.name}
-        onChangeText={text => handleInputChange('name', text)}
-      />
-      <TextInput
-      style={styles.inputContainer}
+        style={[styles.inputContainer, styles.disabledInput]}
         placeholder="Email"
         value={formData.email}
-        onChangeText={text => handleInputChange('email', text)}
+        editable={false}
       />
+
       <TextInput
-      style={styles.inputContainer}
-        placeholder="Bio"
-        value={formData.bio}
-        onChangeText={text => handleInputChange('bio', text)}
-      />
-      <TextInput
-      style={styles.inputContainer}
-        placeholder="Skills (comma-separated)"
-        value={formData.skills}
-        onChangeText={text => handleInputChange('skills', text)}
-      />
-      <TextInput
-      style={styles.inputContainer}
-        placeholder="Learning Goals (comma-separated)"
-        value={formData.learningGoals}
-        onChangeText={text => handleInputChange('learningGoals', text)}
-      />
-      <TextInput
-      style={styles.inputContainer}
+        style={styles.inputContainer}
         placeholder="Rating"
         value={formData.rating.toString()}
+        keyboardType="numeric"
         onChangeText={text =>
           handleInputChange('rating', parseFloat(text) || 5)
         }
       />
       <View style={styles.buttonContainer}>
-            <TouchableOpacity onPress={handleSaveOrUpdate} style={styles.button}>
-            <Text style={styles.buttonText}>
-  {isNewUser ? 'Create Profile' : 'Update Profile'}
-</Text>
-            </TouchableOpacity>
-            </View>
+        <TouchableOpacity onPress={handleSaveOrUpdate} style={styles.button}>
+          <Text style={styles.buttonText}>
+            {isNewUser ? 'Create Profile' : 'Update Profile'}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
-
   );
 }
 
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: {flex: 1, padding: 20},
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignSelf: 'center',
+    marginBottom: 20,
   },
-  input: {flex: 1, fontSize: 16},
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#a9a9a9',
     borderRadius: 5,
     paddingHorizontal: 10,
     marginVertical: 10,
-    width: '95%',
-    marginStart: 10,
-    marginRight: 10,
-    fontSize: 18
+    fontSize: 18,
   },
-  buttonContainer: {
-    marginTop: 20,
-    marginBottom: 20,
-    marginStart: 30,
-    marginRight: 30,
+  disabledInput: {
+    backgroundColor: '#e0e0e0',
+    color: '#888',
   },
+  buttonContainer: {marginTop: 20},
   button: {
     backgroundColor: '#0492c2',
     padding: 12,

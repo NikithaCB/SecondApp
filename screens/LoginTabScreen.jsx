@@ -30,13 +30,19 @@ export default function LoginTabScreen({ navigation }) {
   }
 
    // Configure Google Sign-In
-  useEffect(() => {
+   useEffect(() => {
+    // Configure Google Sign-In
     GoogleSignin.configure({
-      webClientId: "820765875479-ntvslulbhlrdnlmfbfghi9mj8o1urmc3.apps.googleusercontent.com", // Replace with actual Web Client ID
+      webClientId: "820765875479-ntvslulbhlrdnlmfbfghi9mj8o1urmc3.apps.googleusercontent.com",
       offlineAccess: true,
     });
-  },
-  BackHandler.addEventListener('hardwareBackPress',handleBackPress), []);
+  
+    // Add BackHandler event listener
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", handleBackPress);
+  
+    // Cleanup function to remove event listener when component unmounts
+    return () => backHandler.remove();
+  }, []); 
   
 
   // Google Sign-In Function
@@ -64,8 +70,13 @@ export default function LoginTabScreen({ navigation }) {
       .post('http://192.168.1.14:5000/api/profiles/login-user', { email, password })
       .then(res => {
         console.log("Response Login" + res)
+       
         if (res.data.status === 'Ok') {
-          navigation.navigate('Dashboard');
+          const { token, email } = res.data; // ✅ Extract userId
+        console.log("✅ Token:", token);
+        console.log("✅ User ID:", email);
+          // const userId = res.data.userId; // Assume backend sends `userId`
+        navigation.navigate('Dashboard', { email }); // ✅ Passing userId
         } else {
           Alert.alert('Login Failed!');
         }
@@ -76,7 +87,7 @@ export default function LoginTabScreen({ navigation }) {
 
   function handleProfileCreation(){
     console.log("Add Task Clicked");
-    navigation.navigate('ProfileCreation');
+    navigation.navigate('Dashboard');
   }
 
   return (

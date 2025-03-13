@@ -14,13 +14,16 @@ const MyTabBar = ({state, navigation}) => {
       <View style={styles.container}>
         <Image
           style={styles.logo}
-          source={require('../assets/task-icon.png')}
+          source={require('../assets/app-icon.png')}
         />
-        <Text style={styles.logo_text}>Task Manager Dev</Text>
+        <Text style={styles.logo_text}>Skill Swap</Text>
       </View>
 
       <View>
-        <Text style={styles.text_welcome}>Welcome to Task Manager Dev</Text>
+        <Text style={styles.text_welcome}>Welcome to Skill Swap</Text>
+        <Text style={styles.text_tagline}>
+          Spread Knowlege
+        </Text>
         <Text style={styles.text_desclimer}>
           Sign up or login below to manage your projects, task and productivity
         </Text>
@@ -79,6 +82,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 20,
     textAlign: 'center',
+  },
+  text_tagline:{
+    color: '#a9a9a9',
+    fontSize: 14,
+    justifyContent: 'center',
+    textAlign: 'center',
+    marginLeft: 70,
+    marginRight: 70,
+    marginBottom: 15,
   },
   text_desclimer: {
     color: '#a9a9a9',
